@@ -1,0 +1,47 @@
+model MembershipPayment {
+    id     String @id @default(uuid())
+    userId String @unique // one membership payment per user ever
+
+    amount   Decimal       @db.Decimal(10, 2)
+    currency String        @default("USD")
+    status   PaymentStatus @default(UNPAID)
+
+    // Stripe
+    stripePaymentIntentId String? @unique
+    stripeSessionId       String? @unique
+    stripePaymentData     Json? // raw Stripe webhook response stored here
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@map("membership_payments")
+}
+
+model IdeaPayment {
+    id     String @id @default(uuid())
+    userId String
+    ideaId String
+
+    amount   Decimal       @db.Decimal(10, 2)
+    currency String        @default("USD")
+    status   PaymentStatus @default(UNPAID)
+
+    // Stripe
+    stripePaymentIntentId String? @unique
+    stripeSessionId       String? @unique
+    stripePaymentData     Json? // raw Stripe webhook response
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+    idea     Idea          @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+    purchase IdeaPurchase? // created only when status becomes PAID
+
+    @@index([userId])
+    @@index([ideaId])
+    @@index([status])
+    @@map("idea_payments")
+}

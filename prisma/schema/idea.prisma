@@ -1,0 +1,57 @@
+model Idea {
+    id               String   @id @default(uuid())
+    title            String
+    slug             String   @unique
+    problemStatement String   @db.Text
+    proposedSolution String   @db.Text
+    description      String   @db.Text
+    images           String[]
+
+    status            IdeaStatus     @default(DRAFT)
+    accessType        IdeaAccessType @default(FREE)
+    rejectionFeedback String?        @db.Text
+
+    price Decimal? @db.Decimal(10, 2) // required if accessType != FREE
+
+    publishedAt DateTime?
+    createdAt   DateTime  @default(now())
+    updatedAt   DateTime  @updatedAt
+
+    authorId   String
+    categoryId String
+
+    author   User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+    category Category @relation(fields: [categoryId], references: [id])
+
+    votes        Vote[]
+    comments     Comment[]
+    ideaPayments IdeaPayment[]
+    purchases    IdeaPurchase[]
+    watchlists   Watchlist[]
+
+    @@index([status])
+    @@index([accessType])
+    @@index([authorId])
+    @@index([categoryId])
+    @@index([slug])
+    @@map("ideas")
+}
+
+model IdeaPurchase {
+    id            String @id @default(uuid())
+    userId        String
+    ideaId        String
+    ideaPaymentId String @unique
+
+    price       Decimal  @db.Decimal(10, 2)
+    purchasedAt DateTime @default(now())
+
+    user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+    idea        Idea        @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+    ideaPayment IdeaPayment @relation(fields: [ideaPaymentId], references: [id])
+
+    @@unique([userId, ideaId])
+    @@index([userId])
+    @@index([ideaId])
+    @@map("idea_purchases")
+}

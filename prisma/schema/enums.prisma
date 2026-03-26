@@ -1,0 +1,40 @@
+enum Role {
+    USER
+    MEMBER
+    ADMIN
+}
+
+enum IdeaStatus {
+    DRAFT
+    UNDER_REVIEW
+    APPROVED
+    REJECTED
+}
+
+enum IdeaAccessType {
+    FREE
+    MEMBER_ONLY
+    PAID
+}
+
+enum VoteType {
+    UPVOTE
+    DOWNVOTE
+}
+
+enum PaymentStatus {
+    PENDING
+    PAID
+    UNPAID
+}
+
+enum UserStatus {
+    BANNED
+    ACTIVE
+}
+
+enum MemberStatus {
+    PENDING
+    APPROVED
+    REJECTED
+}

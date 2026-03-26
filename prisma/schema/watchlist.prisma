@@ -1,0 +1,13 @@
+model Watchlist {
+    id        String   @id @default(uuid())
+    userId    String
+    ideaId    String
+    createdAt DateTime @default(now())
+
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+    idea Idea @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+
+    @@unique([userId, ideaId])
+    @@index([userId])
+    @@map("watchlist")
+}
