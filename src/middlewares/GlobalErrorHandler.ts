@@ -17,18 +17,23 @@ import {
 } from "../errors/index";
 import { handlePrismaError, isPrismaError } from "../errors/handlePrismaError";
 import AppErrorResponse from "../shared/AppErrorResponse";
+import { deleteUploadedFileFromGlobalErrorHandler } from "../utils/deleteUploadedFileFromGlobalErrorHandler";
 
-const globalErrorHandler = (
+const globalErrorHandler = async (
   error: unknown,
   req: Request,
   res: Response,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _next: NextFunction,
-): void => {
+) => {
   // Log in non-production only
   if (config.NODE_ENV !== "production") {
     console.error("\n[GlobalErrorHandler]:", error);
   }
+
+  // delete file from cloudinary if occur error during uploading file
+
+  await deleteUploadedFileFromGlobalErrorHandler(req);
 
   // 1. Custom AppError
   if (error instanceof AppError) {
