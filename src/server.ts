@@ -1,12 +1,14 @@
 import { Server } from "http";
 import app from "./app.js";
 import { config } from "./config/env.js";
+import { seedAdmin } from "./utils/seed.js";
 
 const port = config.PORT;
 let server: Server;
 
 const bootStrap = async () => {
   try {
+    await seedAdmin();
     server = app.listen(port, () => {
       console.log("This server is running on the port :", port);
     });
