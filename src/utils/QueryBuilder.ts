@@ -275,14 +275,9 @@ export class QueryBuilder<
     this.sortBy = sortBy;
     this.sortOrder = sortOrder;
 
-    // way-1
     this.query.orderBy = {
       [sortBy]: sortOrder,
     };
-
-    // way-2
-    // this.sortBy = sortBy;
-    // this.sortOrder = sortOrder;
 
     if (sortBy.includes(".")) {
       const parts = sortBy.split(".");
