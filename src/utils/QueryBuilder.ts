@@ -100,6 +100,12 @@ export class QueryBuilder<
               [field]: stringFilter,
             };
           }
+          return {
+            [field]: {
+              contains: searchTerm,
+              mode: "insensitive" as const,
+            },
+          };
         })
         .filter(Boolean) as Record<string, unknown>[];
 

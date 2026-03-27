@@ -85,7 +85,7 @@ const globalErrorHandler = async (
 
   // 6. Syntax error (invalid JSON body)
   if (isSyntaxError(error)) {
-    const result = handleSyntaxError();
+    const result = handleSyntaxError(error);
     AppErrorResponse(req, res, result, req.originalUrl);
     return;
   }

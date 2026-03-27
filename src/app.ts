@@ -7,17 +7,24 @@ import cookieParser from "cookie-parser";
 import { toNodeHandler } from "better-auth/node";
 import { auth } from "./lib/auth";
 import { indexRoutes } from "./routes";
+import qs from "qs";
 
 const app: Application = express();
 
-
+app.set("query parser", (str: string) => {
+  return qs.parse(str);
+});
 
 // stripe web hoook
 
-app.post("/api/v1/payment/webhook", express.raw({ type: "application/json" }), (req: Request, res: Response) => {
-  console.log(req.body);
-  res.status(200).json({ message: "Webhook received",received:true });
-});
+app.post(
+  "/api/v1/payment/webhook",
+  express.raw({ type: "application/json" }),
+  (req: Request, res: Response) => {
+    console.log(req.body);
+    res.status(200).json({ message: "Webhook received", received: true });
+  },
+);
 
 // cors
 

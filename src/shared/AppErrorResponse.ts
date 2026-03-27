@@ -30,7 +30,8 @@ const AppErrorResponse = (
     name: error.name,
     code: error.code,
     message: error.message,
-    details: error.details ?? [],
+    ...(error.details !== undefined &&
+      error.details.length > 0 && { details: error.details }),
     path,
     timestamp: new Date().toISOString(),
     requestId: req.headers["x-request-id"] ?? crypto.randomUUID(),
