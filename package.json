@@ -20,7 +20,8 @@
     "build": "tsc",
     "dev": "tsx watch ./src/server.ts",
     "lint": "eslint ./src/**/*",
-    "push": "tsx ./src/scripts/gitpush.ts"
+    "push": "tsx ./src/scripts/gitpush.ts",
+    "stripe:webhook":"stripe listen --forward-to localhost:5000/api/v1/payment/webhook"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.5.0",
@@ -35,6 +36,7 @@
     "multer": "^2.1.1",
     "multer-storage-cloudinary": "^4.0.0",
     "pg": "^8.20.0",
+    "stripe": "^21.0.1",
     "zod": "^4.3.6"
   },
   "devDependencies": {

@@ -17,6 +17,9 @@ interface EnvConfig {
   CLOUDINARY_CLOUD_NAME?: string;
   ADMIN_EMAIL?: string;
   ADMIN_PASSWORD?: string;
+  STRIPE_SECRET_KEY?: string;
+  STRIPE_WEBHOOK_SECRET_KEY?: string;
+  MEMBERSHIP_PRICE?: string;
 }
 
 const loadEnv = (): EnvConfig => {
@@ -35,6 +38,9 @@ const loadEnv = (): EnvConfig => {
     "CLOUDINARY_CLOUD_NAME",
     "ADMIN_EMAIL",
     "ADMIN_PASSWORD",
+    "STRIPE_SECRET_KEY",
+    "STRIPE_WEBHOOK_SECRET_KEY",
+    "MEMBERSHIP_PRICE",
   ];
   requiredVariables.forEach((variable) => {
     if (!process.env[variable]) {
@@ -57,6 +63,9 @@ const loadEnv = (): EnvConfig => {
     CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME as string,
     ADMIN_EMAIL: process.env.ADMIN_EMAIL as string,
     ADMIN_PASSWORD: process.env.ADMIN_PASSWORD as string,
+    STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY as string,
+    STRIPE_WEBHOOK_SECRET_KEY: process.env.STRIPE_WEBHOOK_SECRET_KEY as string,
+    MEMBERSHIP_PRICE: process.env.MEMBERSHIP_PRICE as string,
   };
 };
 

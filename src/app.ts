@@ -10,6 +10,15 @@ import { indexRoutes } from "./routes";
 
 const app: Application = express();
 
+
+
+// stripe web hoook
+
+app.post("/api/v1/payment/webhook", express.raw({ type: "application/json" }), (req: Request, res: Response) => {
+  console.log(req.body);
+  res.status(200).json({ message: "Webhook received",received:true });
+});
+
 // cors
 
 app.use(
