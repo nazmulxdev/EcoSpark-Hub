@@ -1,3 +1,4 @@
+import { NextFunction, Request, Response } from "express";
 import {
   IdeaAccessType,
   IdeaStatus,
@@ -7,6 +8,7 @@ import {
 } from "../../generated/prisma/enums";
 import { prisma } from "../../lib/prisma";
 import AppError from "../../shared/AppError";
+import { ICreateIdea, IUpdateIdea } from "./idea.interface";
 
 const validateUserAndIdea = async (userId: string, ideaId: string) => {
   const user = await prisma.user.findUnique({ where: { id: userId } });
@@ -92,7 +94,57 @@ const checkExistingPayment = async (userId: string, ideaId: string) => {
   return existingPayment;
 };
 
+const fileuploaderMiddlewareForCreate = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  if (req.body.data) {
+    req.body = JSON.parse(req.body.data);
+  }
+
+  const payload: ICreateIdea = req.body;
+
+  const files = req.files as {
+    [fieldname: string]: Express.Multer.File[] | undefined;
+  };
+
+  console.log(files);
+
+  if (files.images && files.images.length > 0) {
+    payload.images = files.images.map((file) => file.path);
+  }
+
+  next();
+};
+
+const fileuploaderMiddlewareForUpdate = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  if (req.body.data) {
+    req.body = JSON.parse(req.body.data);
+  }
+
+  const payload: IUpdateIdea = req.body;
+
+  const files = req.files as {
+    [fieldname: string]: Express.Multer.File[] | undefined;
+  };
+
+  console.log(files);
+
+  if (files.images && files.images.length > 0) {
+    payload.images = files.images.map((file) => file.path);
+  }
+
+  next();
+};
+
 export const ideaUtils = {
   validateUserAndIdea,
   checkExistingPayment,
+  fileuploaderMiddlewareForCreate,
+  fileuploaderMiddlewareForUpdate,
 };

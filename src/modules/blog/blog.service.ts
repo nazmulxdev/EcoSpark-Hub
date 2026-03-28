@@ -1,14 +1,3 @@
-// model Blog {
-//     id          String    @id @default(uuid())
-//     title       String
-//     slug        String    @unique
-//     content     String    @db.Text
-//     coverImage  String?
-//     isPublished Boolean   @default(false)
-//     publishedAt DateTime?
-//     createdAt   DateTime  @default(now())
-//     updatedAt   DateTime  @updatedAt
-
 import { deleteFileFromCloudinary } from "../../config/cloudinary.config";
 import { Blog, Prisma } from "../../generated/prisma/client";
 import { IQueryParams } from "../../interfaces/query.interface";
@@ -18,11 +7,6 @@ import { QueryBuilder } from "../../utils/QueryBuilder";
 import { generateUniqueSlug } from "../../utils/generateSlug";
 import { blogFilterableFields, blogSearchableFields } from "./blog.constant";
 import { ICreateBlog, IUpdateBlog } from "./blog.interface";
-
-//     @@index([title], name: "idx_blogs_title")
-//     @@index([slug], name: "idx_blogs_slug")
-//     @@map("blogs")
-// }
 
 const createBlog = async (userId: string, payload: ICreateBlog) => {
   const isAdminUser = await prisma.user.findUnique({
