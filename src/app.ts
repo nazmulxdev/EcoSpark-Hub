@@ -21,7 +21,7 @@ app.set("query parser", (str: string) => {
 app.post(
   "/api/v1/payment/webhook",
   express.raw({ type: "application/json" }),
-  paymentController.handleStripeWebhokEventForMembership,
+  paymentController.handleStripeWebhook,
 );
 
 // cors

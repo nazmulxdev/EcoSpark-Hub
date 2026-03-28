@@ -6,76 +6,6 @@ import {
   Role,
 } from "../../generated/prisma/enums";
 
-// model Member {
-//     id        String       @id @default(uuid())
-//     userId    String       @unique
-//     status    MemberStatus @default(PENDING)
-//     paymentId String       @unique
-
-//     user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-//     membershipPayment MembershipPayment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
-//     joinedAt          DateTime?
-//     isActive          Boolean           @default(true)
-
-//     createdAt DateTime @default(now())
-//     updatedAt DateTime @updatedAt
-
-//     @@map("members")
-// }
-
-// model MembershipPayment {
-//     id     String @id @default(uuid())
-//     userId String @unique // one membership payment per user ever
-
-//     amount   Decimal       @db.Decimal(10, 2)
-//     currency String        @default("USD")
-//     status   PaymentStatus @default(UNPAID)
-
-//     member Member? // created only when status becomes PAID
-
-//     // Stripe
-//     stripePaymentIntentId String? @unique
-//     stripeSessionId       String? @unique
-//     stripeEventId         String? @unique
-//     stripePaymentData     Json? // raw Stripe webhook response stored here
-
-//     createdAt DateTime @default(now())
-//     updatedAt DateTime @updatedAt
-
-//     user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-//     @@map("membership_payments")
-// }
-
-// model IdeaPayment {
-//     id     String @id @default(uuid())
-//     userId String
-//     ideaId String
-
-//     amount   Decimal       @db.Decimal(10, 2)
-//     currency String        @default("USD")
-//     status   PaymentStatus @default(UNPAID)
-
-//     // Stripe
-//     stripePaymentIntentId String? @unique
-//     stripeSessionId       String? @unique
-//     stripeEventId         String? @unique
-//     stripePaymentData     Json? // raw Stripe webhook response
-
-//     createdAt DateTime @default(now())
-//     updatedAt DateTime @updatedAt
-
-//     user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-//     idea     Idea          @relation(fields: [ideaId], references: [id], onDelete: Cascade)
-//     purchase IdeaPurchase? // created only when status becomes PAID
-
-//     @@index([userId])
-//     @@index([ideaId])
-//     @@index([status])
-//     @@map("idea_payments")
-// }
-
 const handleStripeWebhokEventForMembership = async (event: Stripe.Event) => {
   const existingPayment = await prisma.membershipPayment.findFirst({
     where: {
@@ -167,13 +97,11 @@ const handleStripeWebhokEventForMembership = async (event: Stripe.Event) => {
             },
           });
 
-          // Promote user role to MEMBER
           await tx.user.update({
             where: { id: userId },
             data: { role: Role.MEMBER },
           });
 
-          // Create or update member record
           await tx.member.upsert({
             where: { userId },
             update: {
@@ -186,7 +114,7 @@ const handleStripeWebhokEventForMembership = async (event: Stripe.Event) => {
               joinedAt: new Date(),
               isActive: true,
               userId,
-              paymentId
+              paymentId,
             },
           });
         });
@@ -225,6 +153,148 @@ const handleStripeWebhokEventForMembership = async (event: Stripe.Event) => {
   }
 };
 
+const handleStripeWebhookForIdeaPurchase = async (event: Stripe.Event) => {
+  const alreadyProcessed = await prisma.ideaPayment.findFirst({
+    where: { stripeEventId: event.id },
+  });
+
+  if (alreadyProcessed) {
+    console.log(
+      `[IdeaPurchase] Event ${event.id} already processed. Skipping.`,
+    );
+    return { success: true, message: "Event already processed." };
+  }
+
+  switch (event.type) {
+    case "checkout.session.completed": {
+      const session = event.data.object;
+      const userId = session?.metadata?.userId;
+      const ideaId = session?.metadata?.ideaId;
+      const paymentId = session?.metadata?.paymentId;
+
+      if (!userId || !ideaId || !paymentId) {
+        console.error("[IdeaPurchase] Missing metadata:", {
+          userId,
+          ideaId,
+          paymentId,
+        });
+        return { success: false, message: "Missing metadata." };
+      }
+
+      if (session.payment_status !== "paid") {
+        console.log(
+          "[IdeaPurchase] Payment not completed:",
+          session.payment_status,
+        );
+        return { success: false, message: "Payment not completed." };
+      }
+
+      const payment = await prisma.ideaPayment.findFirst({
+        where: { id: paymentId, userId, ideaId },
+      });
+
+      if (!payment) {
+        console.error("[IdeaPurchase] Payment not found:", {
+          paymentId,
+          userId,
+          ideaId,
+        });
+        return { success: false, message: "Payment not found." };
+      }
+
+      if (payment.status === PaymentStatus.PAID) {
+        console.log("[IdeaPurchase] Already PAID. Skipping.");
+        return { success: true, message: "Already processed." };
+      }
+
+      try {
+        await prisma.$transaction(async (tx) => {
+          // Update idea payment record
+          await tx.ideaPayment.update({
+            where: { id: paymentId },
+            data: {
+              status: PaymentStatus.PAID,
+              stripePaymentIntentId: session.payment_intent as string,
+              stripeSessionId: session.id,
+              stripeEventId: event.id,
+              stripePaymentData: JSON.parse(JSON.stringify(session)),
+            },
+          });
+
+          await tx.ideaPurchase.create({
+            data: {
+              userId,
+              ideaId,
+              ideaPaymentId: paymentId,
+              price: payment.amount,
+            },
+          });
+        });
+
+        console.log(
+          `[IdeaPurchase] Purchased ideaId: ${ideaId} by userId: ${userId}`,
+        );
+        return { success: true, message: "Idea purchased successfully." };
+      } catch (txError) {
+        console.error("[IdeaPurchase] Transaction failed:", txError);
+        return { success: false, message: "Transaction failed." };
+      }
+    }
+
+    case "checkout.session.expired": {
+      const session = event.data.object;
+      const paymentId = session?.metadata?.paymentId;
+
+      if (paymentId) {
+        await prisma.ideaPayment
+          .update({
+            where: { id: paymentId },
+            data: { status: PaymentStatus.UNPAID },
+          })
+          .catch((e) =>
+            console.error(
+              "[IdeaPurchase] Failed to update expired payment:",
+              e,
+            ),
+          );
+      }
+
+      console.log(`[IdeaPurchase] Session expired: ${session.id}`);
+      return { success: true, message: "Session expired handled." };
+    }
+
+    case "payment_intent.payment_failed": {
+      const paymentIntent = event.data.object;
+      console.log(`[IdeaPurchase] Payment intent failed: ${paymentIntent.id}`);
+      return { success: true, message: "Payment failed handled." };
+    }
+
+    default:
+      console.log(`[IdeaPurchase] Unhandled event type: ${event.type}`);
+      return { success: true, message: `Unhandled event: ${event.type}` };
+  }
+};
+
+const handleStripeWebhook = async (event: Stripe.Event) => {
+  const session = event.data.object as { metadata?: { type?: string } };
+  const type = session?.metadata?.type;
+
+  console.log(`[Webhook] Event: ${event.type} | Type: ${type ?? "unknown"}`);
+
+  if (type === "membership") {
+    return await handleStripeWebhokEventForMembership(event);
+  }
+
+  if (type === "idea_purchase") {
+    return await handleStripeWebhookForIdeaPurchase(event);
+  }
+
+  console.log(
+    `[Webhook] No handler for type: ${type ?? "none"} | event: ${event.type}`,
+  );
+  return { success: true, message: `No handler for type: ${type ?? "none"}` };
+};
+
 export const paymentService = {
-  handleStripeWebhokEventForMembership,
+  handleStripeWebhook,
 };
