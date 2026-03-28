@@ -9,6 +9,7 @@
 //     createdAt   DateTime  @default(now())
 //     updatedAt   DateTime  @updatedAt
 
+import { deleteFileFromCloudinary } from "../../config/cloudinary.config";
 import { Blog, Prisma } from "../../generated/prisma/client";
 import { IQueryParams } from "../../interfaces/query.interface";
 import { prisma } from "../../lib/prisma";
@@ -16,7 +17,7 @@ import AppError from "../../shared/AppError";
 import { QueryBuilder } from "../../utils/QueryBuilder";
 import { generateUniqueSlug } from "../../utils/generateSlug";
 import { blogFilterableFields, blogSearchableFields } from "./blog.constant";
-import { ICreateBlog } from "./blog.interface";
+import { ICreateBlog, IUpdateBlog } from "./blog.interface";
 
 //     @@index([title], name: "idx_blogs_title")
 //     @@index([slug], name: "idx_blogs_slug")
@@ -77,7 +78,127 @@ const getAllBlogs = async (query: IQueryParams) => {
   return result;
 };
 
+const getSingleBlog = async (slug: string) => {
+  const blog = await prisma.blog.findUnique({
+    where: {
+      slug,
+    },
+  });
+
+  if (!blog) {
+    throw new AppError(404, "Blog not found", "Not Found", [
+      {
+        field: "slug",
+        message: "Blog not found",
+      },
+    ]);
+  }
+
+  return blog;
+};
+
+const updateBlog = async (slug: string, payload: IUpdateBlog) => {
+  const blog = await prisma.blog.findUnique({
+    where: {
+      slug,
+    },
+  });
+
+  if (!blog) {
+    throw new AppError(404, "Blog not found", "Not Found", [
+      {
+        field: "slug",
+        message: "Blog not found",
+      },
+    ]);
+  }
+
+  if (payload.coverImage) {
+    try {
+      await deleteFileFromCloudinary(blog.coverImage as string);
+    } catch (error) {
+      console.log(error);
+      throw new AppError(
+        500,
+        "Failed to delete cover image",
+        "Internal Server Error",
+        [
+          {
+            field: "coverImage",
+            message: "Failed to delete cover image",
+          },
+        ],
+      );
+    }
+  }
+
+  if (payload.title) {
+    const slug = await generateUniqueSlug(payload.title, "blog", blog.slug);
+    payload.slug = slug;
+  }
+
+  if (payload.isPublished) {
+    payload.publishedAt = new Date();
+  }
+
+  const updatedBlog = await prisma.blog.update({
+    where: {
+      slug,
+    },
+    data: payload,
+  });
+
+  return updatedBlog;
+};
+
+const deleteBlog = async (slug: string) => {
+  const blog = await prisma.blog.findUnique({
+    where: {
+      slug,
+    },
+  });
+
+  if (!blog) {
+    throw new AppError(404, "Blog not found", "Not Found", [
+      {
+        field: "slug",
+        message: "Blog not found",
+      },
+    ]);
+  }
+
+  if (blog.coverImage) {
+    try {
+      await deleteFileFromCloudinary(blog.coverImage);
+    } catch (error) {
+      console.log(error);
+      throw new AppError(
+        500,
+        "Failed to delete cover image",
+        "Internal Server Error",
+        [
+          {
+            field: "coverImage",
+            message: "Failed to delete cover image",
+          },
+        ],
+      );
+    }
+  }
+
+  const deletedBlog = await prisma.blog.delete({
+    where: {
+      slug,
+    },
+  });
+
+  return deletedBlog;
+};
+
 export const blogService = {
   createBlog,
   getAllBlogs,
+  getSingleBlog,
+  updateBlog,
+  deleteBlog,
 };

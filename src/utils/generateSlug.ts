@@ -2,22 +2,24 @@
 import slugify from "slugify";
 import { prisma } from "../lib/prisma";
 
-type SlugModel= "idea" | "blog" | "category";
+type SlugModel = "idea" | "blog" | "category";
 
-export const generateUniqueSlug=async(title:string,model:SlugModel,existingId?:string):Promise<string>=>{
+export const generateUniqueSlug = async (
+  title: string,
+  model: SlugModel,
+  existingId?: string,
+): Promise<string> => {
+  // converting title to slug
 
-    // converting title to slug
+  const baseSlug = slugify(title, {
+    lower: true,
+    strict: true,
+    trim: true,
+  });
 
-    const baseSlug=slugify(title,{
-        lower:true,
-        strict:true,
-        trim:true,
-        
-    })
+  // checking if slug is already exists in the db
 
-    // checking if slug is already exists in the db
-
-     let slug = baseSlug;
+  let slug = baseSlug;
   let suffix = 1;
 
   while (true) {
@@ -36,5 +38,5 @@ export const generateUniqueSlug=async(title:string,model:SlugModel,existingId?:s
     suffix++;
   }
 
-return slug
-}
+  return slug;
+};
