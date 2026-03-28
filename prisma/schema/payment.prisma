@@ -6,9 +6,12 @@ model MembershipPayment {
     currency String        @default("USD")
     status   PaymentStatus @default(UNPAID)
 
+    member Member?
+
     // Stripe
     stripePaymentIntentId String? @unique
     stripeSessionId       String? @unique
+    stripeEventId         String? @unique
     stripePaymentData     Json? // raw Stripe webhook response stored here
 
     createdAt DateTime @default(now())
@@ -31,6 +34,7 @@ model IdeaPayment {
     // Stripe
     stripePaymentIntentId String? @unique
     stripeSessionId       String? @unique
+    stripeEventId         String? @unique
     stripePaymentData     Json? // raw Stripe webhook response
 
     createdAt DateTime @default(now())
