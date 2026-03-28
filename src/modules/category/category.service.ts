@@ -11,7 +11,6 @@ import {
 import { ICreateCategory, IUpdateCategory } from "./category.interface";
 
 const createCategory = async (payload: ICreateCategory) => {
-  let slug: string = "";
   const isCategoryExists = await prisma.category.findUnique({
     where: { name: payload.name },
   });
@@ -22,23 +21,12 @@ const createCategory = async (payload: ICreateCategory) => {
     ]);
   }
 
-  if (!payload.slug) {
-    slug = await generateUniqueSlug(payload.name, "category");
-  } else {
-    const isSlugExists = await prisma.category.findUnique({
-      where: { slug: payload.slug },
-    });
-    if (isSlugExists) {
-      throw new AppError(400, "Category slug already exists", "Bad Request", [
-        { field: "slug", message: "Category slug already exists" },
-      ]);
-    }
-  }
+  const slug = await generateUniqueSlug(payload.name, "category");
 
   const category = await prisma.category.create({
     data: {
       ...payload,
-      slug: payload.slug || slug,
+      slug,
     },
   });
 
@@ -98,27 +86,10 @@ const updateCategory = async (slug: string, payload: IUpdateCategory) => {
     });
 
     if (isCategoryExists && isCategoryExists.id !== category.id) {
-      throw new AppError(400, "Category already exists", "Bad Request", [
+      throw new AppError(409, "Category already exists", "Conflict", [
         { field: "name", message: "Category with this name already exists" },
       ]);
     }
-  }
-
-  if (payload.slug && payload.slug !== category.slug) {
-    const isSlugExists = await prisma.category.findUnique({
-      where: { slug: payload.slug },
-    });
-    if (isSlugExists && isSlugExists.id !== category.id) {
-      throw new AppError(400, "Category slug already exists", "Bad Request", [
-        { field: "slug", message: "Category slug already exists" },
-      ]);
-    }
-  } else if (payload.name && !payload.slug) {
-    payload.slug = await generateUniqueSlug(
-      payload.name,
-      "category",
-      category.slug,
-    );
   }
 
   const updatedCategory = await prisma.category.update({

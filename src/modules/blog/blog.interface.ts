@@ -1,6 +1,5 @@
 export interface ICreateBlog {
   title: string;
-  slug: string;
   content: string;
   coverImage?: string;
   isPublished?: boolean;
@@ -8,9 +7,8 @@ export interface ICreateBlog {
 
 export interface IUpdateBlog {
   title?: string;
-  slug?: string;
   content?: string;
   coverImage?: string;
   isPublished?: boolean;
-  publishedAt?: Date;
+  publishedAt?: Date | null;
 }

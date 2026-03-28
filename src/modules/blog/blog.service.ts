@@ -113,9 +113,9 @@ const updateBlog = async (slug: string, payload: IUpdateBlog) => {
     ]);
   }
 
-  if (payload.coverImage) {
+  if (payload.coverImage && blog.coverImage) {
     try {
-      await deleteFileFromCloudinary(blog.coverImage as string);
+      await deleteFileFromCloudinary(blog.coverImage);
     } catch (error) {
       console.log(error);
       throw new AppError(
@@ -132,13 +132,12 @@ const updateBlog = async (slug: string, payload: IUpdateBlog) => {
     }
   }
 
-  if (payload.title) {
-    const slug = await generateUniqueSlug(payload.title, "blog", blog.slug);
-    payload.slug = slug;
+  if (payload.isPublished && !blog.isPublished) {
+    payload.publishedAt = new Date();
   }
 
-  if (payload.isPublished) {
-    payload.publishedAt = new Date();
+  if (payload.isPublished === false) {
+    payload.publishedAt = null;
   }
 
   const updatedBlog = await prisma.blog.update({
