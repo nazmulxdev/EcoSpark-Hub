@@ -1,0 +1,18 @@
+// model Vote {
+//     id        String   @id @default(uuid())
+//     type      VoteType
+//     userId    String
+//     ideaId    String
+//     createdAt DateTime @default(now())
+//     updatedAt DateTime @updatedAt
+
+//     user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+//     idea Idea @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+
+//     @@unique([userId, ideaId])
+//     @@index([ideaId])
+//     @@map("votes")
+// }
+
+export const voteSearchableFields = ["type"];
+export const voteFilterableFields = ["type"];

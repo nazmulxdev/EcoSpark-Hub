@@ -5,7 +5,3 @@ export const createVoteZodSchema = z.object({
   type: z.enum([VoteType.UPVOTE, VoteType.DOWNVOTE]),
   ideaId: z.string(),
 });
-
-export const updateVoteZodSchema = z.object({
-  type: z.enum([VoteType.UPVOTE, VoteType.DOWNVOTE]),
-});
