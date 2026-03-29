@@ -3,7 +3,6 @@ import { prisma } from "../../lib/prisma";
 import {
   MemberStatus,
   PaymentStatus,
-  Role,
 } from "../../generated/prisma/enums";
 
 const handleStripeWebhokEventForMembership = async (event: Stripe.Event) => {
@@ -97,20 +96,17 @@ const handleStripeWebhokEventForMembership = async (event: Stripe.Event) => {
             },
           });
 
-          await tx.user.update({
-            where: { id: userId },
-            data: { role: Role.MEMBER },
-          });
+          // The User role will NOT be updated here. It requires Admin approval.
 
           await tx.member.upsert({
             where: { userId },
             update: {
-              status: MemberStatus.APPROVED,
+              status: MemberStatus.PENDING,
               joinedAt: new Date(),
               isActive: true,
             },
             create: {
-              status: MemberStatus.APPROVED,
+              status: MemberStatus.PENDING,
               joinedAt: new Date(),
               isActive: true,
               userId,

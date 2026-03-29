@@ -6,6 +6,7 @@ import { ideaRoutes } from "../modules/idea/idea.route";
 import { watchlistRoute } from "../modules/watchlist/watchlist.route";
 import { voteRoutes } from "../modules/vote/vote.route";
 import { commentRoutes } from "../modules/comment/comment.route";
+import { adminRoutes } from "../modules/admin/admin.routes";
 
 const router = Router();
 
@@ -16,5 +17,6 @@ router.use("/ideas", ideaRoutes);
 router.use("/watchlist", watchlistRoute);
 router.use("/votes", voteRoutes);
 router.use("/comments", commentRoutes);
+router.use("/admin", adminRoutes);
 
 export const indexRoutes = router;
