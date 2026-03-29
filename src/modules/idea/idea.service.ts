@@ -319,6 +319,80 @@ const getIdeaByIdForMember = async (userId: string, slug: string) => {
   return idea;
 };
 
+const getIdeaById = async (slug: string) => {
+  const idea = await prisma.idea.findUnique({
+    where: { slug },
+    include: {
+      // ✅ Category info (name, slug, etc.)
+      category: true,
+
+      // ✅ Author basic public profile (never expose password/role)
+      author: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          image: true,
+        },
+      },
+
+      // ✅ Top-level comments only (parentId: null are root comments)
+      comments: {
+        where: {
+          parentId: null, // 👈 only fetch root comments, not replies
+          isDeleted: false, // 👈 exclude soft deleted comments
+        },
+        orderBy: { createdAt: "desc" },
+        include: {
+          // comment owner
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              image: true,
+            },
+          },
+
+          // ✅ Nested replies under each root comment
+          replies: {
+            where: {
+              isDeleted: false, // 👈 exclude soft deleted replies too
+            },
+            orderBy: { createdAt: "asc" }, // 👈 replies oldest first (natural thread order)
+            include: {
+              // reply owner
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                  image: true,
+                },
+              },
+            },
+          },
+        },
+      },
+
+      // ✅ Aggregate counts (no need to fetch full arrays just for numbers)
+      _count: {
+        select: {
+          votes: true, // total votes count
+          comments: true, // total comments count (including replies)
+          purchases: true, // total purchases count
+        },
+      },
+    },
+  });
+
+  if (!idea) {
+    throw new AppError(404, "Idea not found", "NOT_FOUND");
+  }
+
+  return idea;
+};
+
 const updateIdeaForMember = async (
   userId: string,
   slug: string,
@@ -433,4 +507,5 @@ export const ideaService = {
   updateIdeaForMember,
   deleteIdeaForMember,
   getAllIdeas,
+  getIdeaById,
 };

@@ -32,6 +32,8 @@ router.get(
   ideaController.getMyIdeaById,
 );
 
+router.get("/:slug", ideaController.getIdeaById);
+
 router.get("/", authMiddleware(Role.MEMBER), ideaController.getAllIdeas);
 
 router.patch(

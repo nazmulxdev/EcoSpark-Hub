@@ -104,6 +104,18 @@ const getMyIdeaById = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getIdeaById = catchAsync(async (req: Request, res: Response) => {
+  const slug = req.params.slug as string;
+  const result = await ideaService.getIdeaById(slug);
+
+  AppResponse(res, {
+    statusCode: status.OK,
+    success: true,
+    message: "Idea retrieved successfully.",
+    data: result,
+  });
+});
+
 const updateMyIdea = catchAsync(async (req: Request, res: Response) => {
   const userId = req.user?.id as string;
   const slug = req.params.slug as string;
@@ -140,4 +152,5 @@ export const ideaController = {
   updateMyIdea,
   deleteMyIdea,
   getAllIdeas,
+  getIdeaById,
 };
