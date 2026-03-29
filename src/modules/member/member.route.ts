@@ -21,4 +21,10 @@ router.post(
   memberController.initiatePayment,
 );
 
+router.get(
+  "/dashboard",
+  authMiddleware(Role.MEMBER),
+  memberController.getMemberDashboard,
+);
+
 export const memberRoute = router;
