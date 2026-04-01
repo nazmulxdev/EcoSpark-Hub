@@ -1,3 +1,4 @@
+import { Member, Prisma, User } from "../../generated/prisma/client";
 import {
   IdeaStatus,
   MemberStatus,
@@ -5,8 +6,16 @@ import {
   Role,
   UserStatus,
 } from "../../generated/prisma/enums";
+import { IQueryParams } from "../../interfaces/query.interface";
 import { prisma } from "../../lib/prisma";
 import AppError from "../../shared/AppError";
+import { QueryBuilder } from "../../utils/QueryBuilder";
+import {
+  adminMemberFilterableFields,
+  adminMemberSearchableFields,
+  adminUserFilterableFields,
+  adminUserSearchableFields,
+} from "./admin.constant";
 import {
   IChangeIdeaStatus,
   IChangeMemberStatus,
@@ -396,53 +405,96 @@ const changeIdeaStatus = async (slug: string, payload: IChangeIdeaStatus) => {
   return updated;
 };
 
-const getAllUsers = async () => {
-  return prisma.user.findMany({
-    orderBy: { createdAt: "desc" },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      image: true,
-      role: true,
-      userStatus: true,
-      createdAt: true,
-      member: {
-        select: { id: true, status: true, joinedAt: true },
-      },
-    },
+const getAllUsers = async (queryParams: IQueryParams) => {
+  const queryBuilder = new QueryBuilder<
+    User,
+    Prisma.UserWhereInput,
+    Prisma.UserInclude
+  >(prisma.user, queryParams, {
+    searchableFields: adminUserSearchableFields,
+    filterableFields: adminUserFilterableFields,
   });
+
+  const result = await queryBuilder
+    .search()
+    .filter()
+    .paginate()
+    .include({ member: true })
+    .sort()
+    .execute();
+
+  return result;
 };
 
-const getAllMembers = async () => {
-  return prisma.member.findMany({
-    orderBy: { createdAt: "desc" },
-    include: {
-      user: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          image: true,
-          userStatus: true,
-        },
-      },
-      membershipPayment: {
-        select: { amount: true, currency: true, status: true, createdAt: true },
-      },
-    },
+const getAllMembers = async (queryParams: IQueryParams) => {
+  const queryBuilder = new QueryBuilder<
+    Member,
+    Prisma.MemberWhereInput,
+    Prisma.MemberInclude
+  >(prisma.member, queryParams, {
+    searchableFields: adminMemberSearchableFields,
+    filterableFields: adminMemberFilterableFields,
   });
+
+  const result = await queryBuilder
+    .search()
+    .filter()
+    .paginate()
+    .include({ user: true, membershipPayment: true })
+    .sort()
+    .execute();
+
+  return result;
 };
 
-const getAllIdeasForAdmin = async () => {
-  return prisma.idea.findMany({
-    orderBy: { createdAt: "desc" },
-    include: {
-      author: { select: { id: true, name: true, email: true, image: true } },
-      category: { select: { id: true, name: true } },
-      _count: { select: { votes: true, comments: true, purchases: true } },
+const totalRevenueAnalysisOfMemebershipAndIdea = async () => {
+  const [membershipRevenue, membershipStats, ideaRevenue, ideaStats] =
+    await Promise.all([
+      // Membership Revenue (PAID only)
+      prisma.membershipPayment.aggregate({
+        _sum: { amount: true },
+        where: { status: PaymentStatus.PAID },
+      }),
+      // Membership Status Breakdown
+      prisma.membershipPayment.groupBy({
+        by: ["status"],
+        _count: { status: true },
+        _sum: { amount: true },
+      }),
+      // Idea Revenue (from IdeaPurchase, which are created only when PAID)
+      prisma.ideaPurchase.aggregate({
+        _sum: { price: true },
+      }),
+      // Idea Payment Status Breakdown (from IdeaPayment)
+      prisma.ideaPayment.groupBy({
+        by: ["status"],
+        _count: { status: true },
+        _sum: { amount: true },
+      }),
+    ]);
+
+  const totalMembershipRevenue = Number(membershipRevenue._sum.amount ?? 0);
+  const totalIdeaRevenue = Number(ideaRevenue._sum.price ?? 0);
+
+  return {
+    membership: {
+      totalRevenue: totalMembershipRevenue,
+      breakdown: membershipStats.map((stat) => ({
+        status: stat.status,
+        count: stat._count.status,
+        revenue: Number(stat._sum.amount ?? 0),
+      })),
     },
-  });
+    idea: {
+      totalRevenue: totalIdeaRevenue,
+      breakdown: ideaStats.map((stat) => ({
+        status: stat.status,
+        count: stat._count.status,
+        revenue: Number(stat._sum.amount ?? 0),
+      })),
+    },
+    totalRevenue: totalMembershipRevenue + totalIdeaRevenue,
+  };
 };
 
 export const adminService = {
@@ -452,5 +504,5 @@ export const adminService = {
   changeIdeaStatus,
   getAllUsers,
   getAllMembers,
-  getAllIdeasForAdmin,
+  totalRevenueAnalysisOfMemebershipAndIdea,
 };

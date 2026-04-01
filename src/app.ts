@@ -28,7 +28,11 @@ app.post(
 
 app.use(
   cors({
-    origin: [config.FRONTEND_URL as string, config.BETTER_AUTH_URL as string],
+    origin: [
+      config.FRONTEND_URL as string,
+      config.BETTER_AUTH_URL as string,
+      "http://localhost:3000",
+    ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -37,8 +41,6 @@ app.use(
 
 // cookie-parser
 app.use(cookieParser());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
 // better-auth api routes
 
@@ -53,6 +55,8 @@ app.all(
   },
 );
 
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 // app routes
 
 app.use("/api/v1", indexRoutes);

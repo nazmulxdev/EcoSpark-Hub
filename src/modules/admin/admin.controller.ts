@@ -3,6 +3,7 @@ import status from "http-status";
 import AppResponse from "../../shared/AppResponse";
 import catchAsync from "../../shared/CatchAsync";
 import { adminService } from "./admin.service";
+import { IQueryParams } from "../../interfaces/query.interface";
 
 // ── Dashboard ─────────────────────────────────────────────────────────────────
 const getDashboardStats = catchAsync(async (_req: Request, res: Response) => {
@@ -17,8 +18,9 @@ const getDashboardStats = catchAsync(async (_req: Request, res: Response) => {
 });
 
 // ── Users ─────────────────────────────────────────────────────────────────────
-const getAllUsers = catchAsync(async (_req: Request, res: Response) => {
-  const result = await adminService.getAllUsers();
+const getAllUsers = catchAsync(async (req: Request, res: Response) => {
+  const query = req.query as IQueryParams;
+  const result = await adminService.getAllUsers(query);
 
   AppResponse(res, {
     statusCode: status.OK,
@@ -41,8 +43,9 @@ const changeUserStatus = catchAsync(async (req: Request, res: Response) => {
 });
 
 // ── Members ───────────────────────────────────────────────────────────────────
-const getAllMembers = catchAsync(async (_req: Request, res: Response) => {
-  const result = await adminService.getAllMembers();
+const getAllMembers = catchAsync(async (req: Request, res: Response) => {
+  const query = req.query as IQueryParams;
+  const result = await adminService.getAllMembers(query);
 
   AppResponse(res, {
     statusCode: status.OK,
@@ -64,18 +67,6 @@ const changeMemberStatus = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-// ── Ideas ─────────────────────────────────────────────────────────────────────
-const getAllIdeasForAdmin = catchAsync(async (_req: Request, res: Response) => {
-  const result = await adminService.getAllIdeasForAdmin();
-
-  AppResponse(res, {
-    statusCode: status.OK,
-    success: true,
-    message: "Ideas retrieved successfully.",
-    data: result,
-  });
-});
-
 const changeIdeaStatus = catchAsync(async (req: Request, res: Response) => {
   const slug = req.params.slug as string;
   const result = await adminService.changeIdeaStatus(slug, req.body);
@@ -88,12 +79,23 @@ const changeIdeaStatus = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getPaymentAnalysis = catchAsync(async (_req: Request, res: Response) => {
+  const result = await adminService.totalRevenueAnalysisOfMemebershipAndIdea();
+
+  AppResponse(res, {
+    statusCode: status.OK,
+    success: true,
+    message: "Payment analysis retrieved successfully.",
+    data: result,
+  });
+});
+
 export const adminController = {
   getDashboardStats,
+  getPaymentAnalysis,
   getAllUsers,
   changeUserStatus,
   getAllMembers,
   changeMemberStatus,
-  getAllIdeasForAdmin,
   changeIdeaStatus,
 };

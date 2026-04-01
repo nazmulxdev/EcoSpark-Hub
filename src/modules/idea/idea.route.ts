@@ -34,7 +34,7 @@ router.get(
 
 router.get("/:slug", ideaController.getIdeaById);
 
-router.get("/", authMiddleware(Role.MEMBER), ideaController.getAllIdeas);
+router.get("/", ideaController.getAllIdeas);
 
 router.patch(
   "/:slug",
@@ -56,23 +56,6 @@ router.delete(
   ideaController.deleteMyIdea,
 );
 
-// Payment routes (currently mixed in the same router for simplicity, but can be prefixed)  payment have created by id not used slug
-router.post(
-  "/purchase/:ideaId",
-  authMiddleware(Role.USER, Role.MEMBER),
-  ideaController.purchaseIdea,
-);
 
-router.post(
-  "/purchase-with-pay-later/:ideaId",
-  authMiddleware(Role.USER, Role.MEMBER),
-  ideaController.purchaseIdeaWithPayLater,
-);
-
-router.post(
-  "/initiate-payment/:ideaId",
-  authMiddleware(Role.USER, Role.MEMBER),
-  ideaController.initiateIdeaPayment,
-);
 
 export const ideaRoutes = router;

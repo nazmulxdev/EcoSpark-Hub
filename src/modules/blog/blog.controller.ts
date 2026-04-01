@@ -11,6 +11,7 @@ const createBlog = catchAsync(async (req: Request, res: Response) => {
   if (req.file) {
     payload.coverImage = req.file.path as string;
   }
+
   console.log(payload);
 
   const result = await blogService.createBlog(userId, payload);
@@ -51,12 +52,9 @@ const getSingleBlog = catchAsync(async (req: Request, res: Response) => {
 const updateBlog = catchAsync(async (req: Request, res: Response) => {
   const slug = req.params.slug as string;
   const payload = req.body as IUpdateBlog;
-  console.log("payload", payload);
-  console.log("file", req.file);
   if (req.file) {
     payload.coverImage = req.file.path as string;
   }
-  console.log(payload);
 
   const result = await blogService.updateBlog(slug, payload);
 

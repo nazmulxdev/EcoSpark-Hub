@@ -1,30 +1,3 @@
-// model User {
-//     id            String     @id @default(uuid())
-//     name          String
-//     email         String
-//     emailVerified Boolean    @default(false)
-//     image         String?
-//     createdAt     DateTime   @default(now())
-//     updatedAt     DateTime   @updatedAt
-//     role          Role       @default(USER)
-//     userStatus    UserStatus @default(ACTIVE)
-//     sessions      Session[]
-//     accounts      Account[]
-//     member        Member?
-//     ideas         Idea[]
-//     votes         Vote[]
-//     comments      Comment[]
-
-//     ideaPurchases IdeaPurchase[]
-
-//     membershipPayment MembershipPayment?
-//     ideaPayments      IdeaPayment[]
-//     watchLists        Watchlist[]
-
-//     @@unique([email])
-//     @@map("users")
-// }
-
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { prisma } from "./prisma";
@@ -33,6 +6,11 @@ import { Role, UserStatus } from "../generated/prisma/enums";
 
 export const auth = betterAuth({
   baseURL: config.BETTER_AUTH_URL,
+  trustedOrigins: [
+    config.FRONTEND_URL as string,
+    config.BETTER_AUTH_URL as string,
+    "http://localhost:3000",
+  ],
   secret: config.BETTER_AUTH_SECRET,
   database: prismaAdapter(prisma, {
     provider: "postgresql",
@@ -45,6 +23,7 @@ export const auth = betterAuth({
     google: {
       clientId: config.OAUTH_CLIENT_ID as string,
       clientSecret: config.OAUTH_CLIENT_SECRET,
+      redirectUri: `${config.BETTER_AUTH_URL}/api/auth/callback/google`,
       mapProfileToUser: () => {
         return {
           role: Role.USER,
@@ -70,6 +49,21 @@ export const auth = betterAuth({
         defaultValue: UserStatus.ACTIVE,
         input: false,
       },
+    },
+  },
+  session: {
+    expiresIn: 60 * 60 * 24 * 7,
+    updateAge: 60 * 60 * 24,
+    cookieCache: {
+      enabled: true,
+      maxAge: 60 * 60 * 24 * 7,
+    },
+  },
+
+  account: {
+    accountLinking: {
+      enabled: true,
+      trustedProviders: ["google"],
     },
   },
 });

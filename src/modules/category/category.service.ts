@@ -47,6 +47,7 @@ const getAllCategories = async (query: IQueryParams) => {
     .search()
     .filter()
     .paginate()
+    .include({ ideas: true })
     .sort()
     .execute();
   return result;

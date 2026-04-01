@@ -20,6 +20,8 @@ const validateRequest = (schema: IValidationSchema) => {
         // body.data is not valid JSON — leave req.body untouched
       }
     }
+
+    console.log("after parsed", req.body);
     if (schema.body) {
       const result = await schema.body.safeParseAsync(req.body);
       if (!result.success) {

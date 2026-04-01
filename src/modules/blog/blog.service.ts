@@ -55,7 +55,6 @@ const getAllBlogs = async (query: IQueryParams) => {
   const result = await queryBuilder
     .search()
     .filter()
-    .where({ isPublished: true })
     .paginate()
     .sort()
     .execute();
