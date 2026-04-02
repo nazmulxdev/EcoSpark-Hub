@@ -17,6 +17,7 @@ router.post(
 );
 
 router.get("/", blogController.getAllBlogs);
+router.get("/public", blogController.getAllBlogsPublic);
 
 router.get("/:slug", blogController.getSingleBlog);
 

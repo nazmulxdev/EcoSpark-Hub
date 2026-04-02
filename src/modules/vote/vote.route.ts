@@ -9,7 +9,7 @@ const router = Router();
 
 router.post(
   "/",
-  authMiddleware(Role.USER, Role.MEMBER),
+  authMiddleware(Role.USER, Role.MEMBER, Role.ADMIN),
   validateRequest({ body: createVoteZodSchema }),
   voteController.castVote,
 );

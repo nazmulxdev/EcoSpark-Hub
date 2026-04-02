@@ -57,6 +57,45 @@ const getAllBlogs = async (query: IQueryParams) => {
     .filter()
     .paginate()
     .sort()
+    .dynamicInclude({
+      author: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          image: true,
+        },
+      },
+    })
+    .execute();
+  return result;
+};
+const getAllBlogsPublic = async (query: IQueryParams) => {
+  const queryBuilder = new QueryBuilder<Blog, Prisma.BlogWhereInput>(
+    prisma.blog,
+    query,
+    {
+      searchableFields: blogSearchableFields,
+      filterableFields: blogFilterableFields,
+    },
+  );
+
+  const result = await queryBuilder
+    .search()
+    .filter()
+    .paginate()
+    .sort()
+    .where({ isPublished: true })
+    .dynamicInclude({
+      author: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          image: true,
+        },
+      },
+    })
     .execute();
   return result;
 };
@@ -180,6 +219,7 @@ const deleteBlog = async (slug: string) => {
 export const blogService = {
   createBlog,
   getAllBlogs,
+  getAllBlogsPublic,
   getSingleBlog,
   updateBlog,
   deleteBlog,

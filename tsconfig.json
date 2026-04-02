@@ -3,18 +3,18 @@
     "rootDir": "./src",
     "outDir": "./dist",
     "module": "ESNext",
-    "target": "es2023",
+    "target": "ES2022",
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
     "moduleResolution": "bundler",
     "esModuleInterop": true,
     "strict": true,
     "isolatedModules": true,
-    "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
+    "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
     "types": ["node"]
   },
-  "include": ["./src"],
-  "exclude": ["node_modules", "./dist"]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
 }

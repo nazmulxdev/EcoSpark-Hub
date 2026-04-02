@@ -96,10 +96,21 @@ const getAllIdeasPublic = async (query: IQueryParams) => {
     .paginate()
     .include({
       category: true,
-      author: true,
-      comments: true,
-      votes: true,
-      purchases: true,
+      author: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          image: true,
+        },
+      },
+      _count: {
+        select: {
+          votes: true,
+          comments: true,
+          purchases: true,
+        },
+      },
     })
     .sort()
     .where({ status: IdeaStatus.APPROVED })

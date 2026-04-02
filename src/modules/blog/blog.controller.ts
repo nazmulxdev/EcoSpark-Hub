@@ -38,6 +38,18 @@ const getAllBlogs = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getAllBlogsPublic = catchAsync(async (req: Request, res: Response) => {
+  const query = req.query as IQueryParams;
+  const result = await blogService.getAllBlogsPublic(query);
+
+  AppResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Blogs fetched successfully",
+    data: result,
+  });
+});
+
 const getSingleBlog = catchAsync(async (req: Request, res: Response) => {
   const slug = req.params.slug as string;
   const result = await blogService.getSingleBlog(slug);
@@ -80,6 +92,7 @@ const deleteBlog = catchAsync(async (req: Request, res: Response) => {
 export const blogController = {
   createBlog,
   getAllBlogs,
+  getAllBlogsPublic,
   getSingleBlog,
   updateBlog,
   deleteBlog,
