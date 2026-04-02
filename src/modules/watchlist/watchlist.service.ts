@@ -3,6 +3,7 @@ import AppError from "../../shared/AppError";
 import { IQueryParams } from "../../interfaces/query.interface";
 import { QueryBuilder } from "../../utils/QueryBuilder";
 import { ICreateWatchlist } from "./watchlist.interface";
+import { Prisma, Watchlist } from "../../generated/prisma/client";
 
 const addToWatchlist = async (userId: string, payload: ICreateWatchlist) => {
   const { ideaId } = payload;
@@ -28,7 +29,7 @@ const addToWatchlist = async (userId: string, payload: ICreateWatchlist) => {
     throw new AppError(
       400,
       "This idea is already in your watchlist.",
-      "ALREADY_EXISTS"
+      "ALREADY_EXISTS",
     );
   }
 
@@ -56,11 +57,7 @@ const removeFromWatchlist = async (userId: string, ideaId: string) => {
   });
 
   if (!existingEntry) {
-    throw new AppError(
-      404,
-      "This idea is not in your watchlist.",
-      "NOT_FOUND"
-    );
+    throw new AppError(404, "This idea is not in your watchlist.", "NOT_FOUND");
   }
 
   await prisma.watchlist.delete({
@@ -73,8 +70,11 @@ const removeFromWatchlist = async (userId: string, ideaId: string) => {
 };
 
 const getMyWatchlist = async (userId: string, query: IQueryParams) => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const queryBuilder = new QueryBuilder(prisma.watchlist as any, query as any, {
+  const queryBuilder = new QueryBuilder<
+    Watchlist,
+    Prisma.WatchlistWhereInput,
+    Prisma.WatchlistInclude
+  >(prisma.watchlist, query, {
     searchableFields: [],
     filterableFields: [],
   });
@@ -86,18 +86,18 @@ const getMyWatchlist = async (userId: string, query: IQueryParams) => {
     .sort()
     .fields()
     .where({ userId })
-    .dynamicInclude({
+    .include({
       idea: {
         include: {
-          category: true,
           author: {
             select: {
               id: true,
               name: true,
               email: true,
-              profileImage: true,
+              image: true,
             },
           },
+          category: true,
           _count: {
             select: {
               votes: true,
@@ -112,8 +112,22 @@ const getMyWatchlist = async (userId: string, query: IQueryParams) => {
   return result;
 };
 
+const checkInWatchlist = async (userId: string, ideaId: string) => {
+  const entry = await prisma.watchlist.findUnique({
+    where: {
+      userId_ideaId: {
+        userId,
+        ideaId,
+      },
+    },
+  });
+
+  return !!entry;
+};
+
 export const watchlistService = {
   addToWatchlist,
   removeFromWatchlist,
   getMyWatchlist,
+  checkInWatchlist,
 };

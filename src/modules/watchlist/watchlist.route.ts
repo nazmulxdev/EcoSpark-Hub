@@ -26,4 +26,12 @@ router.get(
   watchlistController.getMyWatchlist,
 );
 
+// backend: modules/watchlist/watchlist.route.ts (ADD ROUTE)
+
+router.get(
+  "/check/:ideaId",
+  authMiddleware(Role.USER, Role.MEMBER),
+  watchlistController.checkInWatchlist,
+);
+
 export const watchlistRoute = router;

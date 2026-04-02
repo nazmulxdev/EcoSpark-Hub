@@ -45,8 +45,25 @@ const getMyWatchlist = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+// backend: modules/watchlist/watchlist.controller.ts (ADD THIS)
+
+const checkInWatchlist = catchAsync(async (req: Request, res: Response) => {
+  const userId = req.user?.id as string;
+  const ideaId = req.params.ideaId as string;
+
+  const exists = await watchlistService.checkInWatchlist(userId, ideaId);
+
+  AppResponse(res, {
+    statusCode: status.OK,
+    success: true,
+    message: "Watchlist check completed.",
+    data: { exists },
+  });
+});
+
 export const watchlistController = {
   addToWatchlist,
   removeFromWatchlist,
   getMyWatchlist,
+  checkInWatchlist,
 };

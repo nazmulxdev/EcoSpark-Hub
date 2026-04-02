@@ -550,7 +550,26 @@ const myPurchasedIdeas = async (userId: string) => {
   const ideas = await prisma.ideaPayment.findMany({
     where: { userId },
     include: {
-      idea: true,
+      idea: {
+        include: {
+          category: true,
+          author: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              image: true,
+            },
+          },
+          _count: {
+            select: {
+              votes: true,
+              comments: true,
+              purchases: true,
+            },
+          },
+        },
+      },
     },
   });
 
