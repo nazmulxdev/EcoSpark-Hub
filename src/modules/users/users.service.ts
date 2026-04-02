@@ -12,6 +12,8 @@ const getUserDashboard = async (userId: string) => {
       role: true,
       userStatus: true,
       createdAt: true,
+      membershipPayment: true,
+      member: true,
     },
   });
 
@@ -41,7 +43,13 @@ const getUserDashboard = async (userId: string) => {
       orderBy: { purchasedAt: "desc" },
       include: {
         idea: {
-          select: { id: true, title: true, slug: true, images: true, price: true },
+          select: {
+            id: true,
+            title: true,
+            slug: true,
+            images: true,
+            price: true,
+          },
         },
       },
     }),

@@ -22,3 +22,5 @@ router.post(
   authMiddleware(Role.USER, Role.MEMBER),
   ideaPurchaseController.initiateIdeaPayment,
 );
+
+export const ideaPurchaseRoute = router;

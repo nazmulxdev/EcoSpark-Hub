@@ -97,9 +97,44 @@ const purchaseIdea = async (userId: string, ideaId: string) => {
 };
 
 const purchaseIdeaWithPayLater = async (userId: string, ideaId: string) => {
-  const { idea } = await ideaUtils.validateUserAndIdea(userId, ideaId);
+  // const { idea } = await ideaUtils.validateUserAndIdea(userId, ideaId);
 
-  const existingPayment = await ideaUtils.checkExistingPayment(userId, ideaId);
+  // const existingPayment = await ideaUtils.checkExistingPayment(userId, ideaId);
+
+  const idea = await prisma.idea.findUnique({ where: { id: ideaId } });
+  if (!idea) {
+    throw new AppError(404, "Idea not found", "NOT_FOUND");
+  }
+
+  // Check if user has purchased
+  const purchase = await prisma.ideaPurchase.findUnique({
+    where: {
+      userId_ideaId: { userId, ideaId: idea.id },
+    },
+  });
+
+  if (purchase) {
+    throw new AppError(
+      400,
+      "You already have a payment record for this idea.",
+      "PAYMENT_EXISTS",
+      [
+        {
+          field: "ideaId",
+          message: "Use initiate-payment to complete your payment.",
+        },
+      ],
+    );
+  }
+
+  // Check if payment is completed
+  const existingPayment = await prisma.ideaPayment.findFirst({
+    where: {
+      userId,
+      ideaId: idea.id,
+      status: PaymentStatus.PAID,
+    },
+  });
 
   if (existingPayment) {
     throw new AppError(

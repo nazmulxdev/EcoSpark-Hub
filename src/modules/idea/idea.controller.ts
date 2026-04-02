@@ -6,8 +6,6 @@ import status from "http-status";
 import { ideaService } from "./idea.service";
 import { IQueryParams } from "../../interfaces/query.interface";
 
-
-
 const createIdea = catchAsync(async (req: Request, res: Response) => {
   const userId = req.user?.id as string;
 
@@ -23,8 +21,33 @@ const createIdea = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-const getAllIdeas = catchAsync(async (req: Request, res: Response) => {
-  const result = await ideaService.getAllIdeas(req.query as IQueryParams);
+const getAllIdeasForAdmin = catchAsync(async (req: Request, res: Response) => {
+  const result = await ideaService.getAllIdeasForAdmin(
+    req.query as IQueryParams,
+  );
+
+  AppResponse(res, {
+    statusCode: status.OK,
+    success: true,
+    message: "Ideas retrieved successfully.",
+    data: result,
+  });
+});
+
+const getAllIdeasPublic = catchAsync(async (req: Request, res: Response) => {
+  const result = await ideaService.getAllIdeasPublic(req.query as IQueryParams);
+
+  AppResponse(res, {
+    statusCode: status.OK,
+    success: true,
+    message: "Ideas retrieved successfully.",
+    data: result,
+  });
+});
+
+const getMyPurchasedIdeas = catchAsync(async (req: Request, res: Response) => {
+  const userId = req.user?.id as string;
+  const result = await ideaService.myPurchasedIdeas(userId);
 
   AppResponse(res, {
     statusCode: status.OK,
@@ -49,6 +72,36 @@ const getMyIdeas = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getMyDraftIdeas = catchAsync(async (req: Request, res: Response) => {
+  const userId = req.user?.id as string;
+  const result = await ideaService.getDraftIdeasForMember(
+    userId,
+    req.query as IQueryParams,
+  );
+
+  AppResponse(res, {
+    statusCode: status.OK,
+    success: true,
+    message: "Ideas retrieved successfully.",
+    data: result,
+  });
+});
+
+const submitIdeaForAdminApproval = catchAsync(
+  async (req: Request, res: Response) => {
+    const userId = req.user?.id as string;
+    const slug = req.params.slug as string;
+    const result = await ideaService.submitIdeaForAdminApproval(userId, slug);
+
+    AppResponse(res, {
+      statusCode: status.OK,
+      success: true,
+      message: "Idea submitted successfully.",
+      data: result,
+    });
+  },
+);
+
 const getMyIdeaById = catchAsync(async (req: Request, res: Response) => {
   const userId = req.user?.id as string;
   const slug = req.params.slug as string;
@@ -64,7 +117,8 @@ const getMyIdeaById = catchAsync(async (req: Request, res: Response) => {
 
 const getIdeaById = catchAsync(async (req: Request, res: Response) => {
   const slug = req.params.slug as string;
-  const result = await ideaService.getIdeaById(slug);
+  const user = req.user?.id as string;
+  const result = await ideaService.getIdeaById(slug, user);
 
   AppResponse(res, {
     statusCode: status.OK,
@@ -100,12 +154,30 @@ const deleteMyIdea = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const checkPurchaseStatus = catchAsync(async (req: Request, res: Response) => {
+  const userId = req.user?.id as string;
+  const ideaId = req.params.ideaId as string;
+  const result = await ideaService.checkPurchaseStatus(userId, ideaId);
+
+  AppResponse(res, {
+    statusCode: status.OK,
+    success: true,
+    message: "Purchase status checked successfully.",
+    data: result,
+  });
+});
+
 export const ideaController = {
   createIdea,
   getMyIdeas,
   getMyIdeaById,
   updateMyIdea,
   deleteMyIdea,
-  getAllIdeas,
+  getAllIdeasForAdmin,
+  getAllIdeasPublic,
   getIdeaById,
+  getMyDraftIdeas,
+  submitIdeaForAdminApproval,
+  getMyPurchasedIdeas,
+  checkPurchaseStatus,
 };

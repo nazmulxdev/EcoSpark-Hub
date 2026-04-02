@@ -11,12 +11,11 @@ const EXPIRY_MINUTES = 30;
 const expireMembershipPayments = async (): Promise<void> => {
   const cutoff = minutesAgo(EXPIRY_MINUTES);
 
-  const result = await prisma.membershipPayment.updateMany({
+  const result = await prisma.membershipPayment.deleteMany({
     where: {
       status: { in: [PaymentStatus.UNPAID, PaymentStatus.PENDING] },
       createdAt: { lt: cutoff },
     },
-    data: { status: PaymentStatus.UNPAID },
   });
 
   if (result.count > 0) {
@@ -29,12 +28,11 @@ const expireMembershipPayments = async (): Promise<void> => {
 const expireIdeaPayments = async (): Promise<void> => {
   const cutoff = minutesAgo(EXPIRY_MINUTES);
 
-  const result = await prisma.ideaPayment.updateMany({
+  const result = await prisma.ideaPayment.deleteMany({
     where: {
       status: { in: [PaymentStatus.UNPAID, PaymentStatus.PENDING] },
       createdAt: { lt: cutoff },
     },
-    data: { status: PaymentStatus.UNPAID },
   });
 
   if (result.count > 0) {

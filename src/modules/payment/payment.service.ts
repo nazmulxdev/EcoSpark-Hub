@@ -1,9 +1,6 @@
 import Stripe from "stripe";
 import { prisma } from "../../lib/prisma";
-import {
-  MemberStatus,
-  PaymentStatus,
-} from "../../generated/prisma/enums";
+import { MemberStatus, PaymentStatus } from "../../generated/prisma/enums";
 
 const handleStripeWebhokEventForMembership = async (event: Stripe.Event) => {
   const existingPayment = await prisma.membershipPayment.findFirst({
@@ -104,6 +101,7 @@ const handleStripeWebhokEventForMembership = async (event: Stripe.Event) => {
               status: MemberStatus.PENDING,
               joinedAt: new Date(),
               isActive: true,
+              paymentId,
             },
             create: {
               status: MemberStatus.PENDING,
@@ -116,7 +114,10 @@ const handleStripeWebhokEventForMembership = async (event: Stripe.Event) => {
         });
 
         console.log(`Membership created for userId: ${userId}`);
-        return { success: true, message: "Membership created successfully." };
+        return {
+          success: true,
+          message: "Membership fee paid successfully.Wait for admin approval.",
+        };
       } catch (txError) {
         console.error("Transaction failed for membership creation:", txError);
         return { success: false, message: "Transaction failed." };

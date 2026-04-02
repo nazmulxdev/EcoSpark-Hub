@@ -172,8 +172,26 @@ const initiatePayment = async (userId: string) => {
   };
 };
 
+const getMyPaymentInfo = async (userId: string) => {
+  const payment = await prisma.membershipPayment.findUnique({
+    where: { userId },
+    include: {
+      user: true,
+    },
+  });
+
+  if (!payment) {
+    throw new AppError(404, "No pending payment found.", "NOT_FOUND", [
+      { field: "userId", message: "No membership payment record found." },
+    ]);
+  }
+
+  return payment;
+};
+
 export const beMemberService = {
   becomeMember,
   becomeMemberWithPayLater,
   initiatePayment,
+  getMyPaymentInfo,
 };

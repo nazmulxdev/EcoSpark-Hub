@@ -6,7 +6,7 @@ import { beMemberController } from "./beMember.controller";
 const router = Router();
 
 router.post(
-  "/become-member",
+  "/become-member-with-stripe",
   authMiddleware(Role.USER),
   beMemberController.becomeMember,
 );
@@ -20,3 +20,10 @@ router.post(
   authMiddleware(Role.USER),
   beMemberController.initiatePayment,
 );
+router.get(
+  "/my-payment-info",
+  authMiddleware(Role.USER),
+  beMemberController.getMyPaymentInfo,
+);
+
+export const beMemberRoute = router;

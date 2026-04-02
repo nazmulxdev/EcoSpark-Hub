@@ -8,6 +8,8 @@ import { voteRoutes } from "../modules/vote/vote.route";
 import { commentRoutes } from "../modules/comment/comment.route";
 import { adminRoutes } from "../modules/admin/admin.routes";
 import { usersRoute } from "../modules/users/users.route";
+import { beMemberRoute } from "../modules/beMember/beMember.route";
+import { ideaPurchaseRoute } from "../modules/ideaPurchase/ideaPurchase.route";
 
 const router = Router();
 
@@ -20,5 +22,7 @@ router.use("/votes", voteRoutes);
 router.use("/comments", commentRoutes);
 router.use("/admin", adminRoutes);
 router.use("/users", usersRoute);
+router.use("/be-member", beMemberRoute);
+router.use("/idea-purchase", ideaPurchaseRoute);
 
 export const indexRoutes = router;

@@ -5,6 +5,7 @@ import {
   IdeaAccessType,
   IdeaStatus,
   PaymentStatus,
+  Role,
 } from "../../generated/prisma/enums";
 import { IdeaInclude } from "../../generated/prisma/models";
 import { IQueryParams } from "../../interfaces/query.interface";
@@ -14,8 +15,6 @@ import { QueryBuilder } from "../../utils/QueryBuilder";
 import { generateUniqueSlug } from "../../utils/generateSlug";
 import { ideaFilterableFields, ideaSearchableFields } from "./idea.constant";
 import { ICreateIdea } from "./idea.interface";
-
-
 
 // ── 4. Member CRUD operations ────────────────────────────────────────────────
 
@@ -54,7 +53,7 @@ const createIdea = async (userId: string, payload: ICreateIdea) => {
   return idea;
 };
 
-const getAllIdeas = async (query: IQueryParams) => {
+const getAllIdeasForAdmin = async (query: IQueryParams) => {
   const queryBuilder = new QueryBuilder<
     Idea,
     Prisma.IdeaWhereInput,
@@ -81,6 +80,34 @@ const getAllIdeas = async (query: IQueryParams) => {
 
   return result;
 };
+const getAllIdeasPublic = async (query: IQueryParams) => {
+  const queryBuilder = new QueryBuilder<
+    Idea,
+    Prisma.IdeaWhereInput,
+    IdeaInclude
+  >(prisma.idea, query, {
+    searchableFields: ideaSearchableFields,
+    filterableFields: ideaFilterableFields,
+  });
+
+  const result = await queryBuilder
+    .search()
+    .filter()
+    .paginate()
+    .include({
+      category: true,
+      author: true,
+      comments: true,
+      votes: true,
+      purchases: true,
+    })
+    .sort()
+    .where({ status: IdeaStatus.APPROVED })
+    .fields()
+    .execute();
+
+  return result;
+};
 
 const getIdeasForMember = async (userId: string, query: IQueryParams) => {
   const queryBuilder = new QueryBuilder<
@@ -99,6 +126,42 @@ const getIdeasForMember = async (userId: string, query: IQueryParams) => {
     .sort()
     .fields()
     .where({ authorId: userId })
+    .include({
+      category: true,
+      author: true,
+      comments: true,
+      votes: true,
+      purchases: true,
+    })
+    .execute();
+
+  return result;
+};
+
+const getDraftIdeasForMember = async (userId: string, query: IQueryParams) => {
+  const queryBuilder = new QueryBuilder<
+    Idea,
+    Prisma.IdeaWhereInput,
+    IdeaInclude
+  >(prisma.idea, query, {
+    searchableFields: ideaSearchableFields,
+    filterableFields: ideaFilterableFields,
+  });
+
+  const result = await queryBuilder
+    .search()
+    .filter()
+    .paginate()
+    .sort()
+    .fields()
+    .where({ authorId: userId, status: IdeaStatus.DRAFT })
+    .include({
+      category: true,
+      author: true,
+      comments: true,
+      votes: true,
+      purchases: true,
+    })
     .execute();
 
   return result;
@@ -130,14 +193,24 @@ const getIdeaByIdForMember = async (userId: string, slug: string) => {
   return idea;
 };
 
-const getIdeaById = async (slug: string) => {
-  const idea = await prisma.idea.findUnique({
+const getIdeaById = async (slug: string, userId?: string) => {
+  const getSuggestedActionText = (suggestedAction: string) => {
+    switch (suggestedAction) {
+      case "complete_payment":
+        return "Complete Payment";
+      case "buy_membership_or_idea":
+        return "Become Member or Purchase";
+      case "buy_idea":
+        return "Purchase Now";
+      default:
+        return "Get Access";
+    }
+  };
+
+  const ideaDetails = await prisma.idea.findUnique({
     where: { slug },
     include: {
-      // ✅ Category info (name, slug, etc.)
       category: true,
-
-      // ✅ Author basic public profile (never expose password/role)
       author: {
         select: {
           id: true,
@@ -146,62 +219,227 @@ const getIdeaById = async (slug: string) => {
           image: true,
         },
       },
-
-      // ✅ Top-level comments only (parentId: null are root comments)
-      comments: {
-        where: {
-          parentId: null, // 👈 only fetch root comments, not replies
-          isDeleted: false, // 👈 exclude soft deleted comments
-        },
-        orderBy: { createdAt: "desc" },
-        include: {
-          // comment owner
-          user: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              image: true,
-            },
-          },
-
-          // ✅ Nested replies under each root comment
-          replies: {
-            where: {
-              isDeleted: false, // 👈 exclude soft deleted replies too
-            },
-            orderBy: { createdAt: "asc" }, // 👈 replies oldest first (natural thread order)
-            include: {
-              // reply owner
-              user: {
-                select: {
-                  id: true,
-                  name: true,
-                  email: true,
-                  image: true,
-                },
-              },
-            },
-          },
-        },
-      },
-
-      // ✅ Aggregate counts (no need to fetch full arrays just for numbers)
       _count: {
         select: {
-          votes: true, // total votes count
-          comments: true, // total comments count (including replies)
-          purchases: true, // total purchases count
+          votes: true,
+          comments: true,
+          purchases: true,
         },
       },
     },
   });
 
-  if (!idea) {
+  if (!ideaDetails) {
     throw new AppError(404, "Idea not found", "NOT_FOUND");
   }
 
-  return idea;
+  const fetchFullIdea = () =>
+    prisma.idea.findUnique({
+      where: { slug },
+      include: {
+        category: true,
+        author: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            image: true,
+          },
+        },
+        comments: {
+          where: { parentId: null, isDeleted: false },
+          orderBy: { createdAt: "desc" },
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                image: true,
+              },
+            },
+            replies: {
+              where: { isDeleted: false },
+              orderBy: { createdAt: "asc" },
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    image: true,
+                  },
+                },
+                replies: {
+                  where: { isDeleted: false },
+                  orderBy: { createdAt: "asc" },
+                  include: {
+                    user: {
+                      select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        image: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        _count: {
+          select: {
+            votes: true,
+            comments: true,
+            purchases: true,
+          },
+        },
+      },
+    });
+
+  const buildLockedResponse = (extra: Record<string, unknown> = {}) => ({
+    id: ideaDetails.id,
+    title: ideaDetails.title,
+    slug: ideaDetails.slug,
+    accessType: ideaDetails.accessType,
+    price: ideaDetails.price,
+    status: ideaDetails.status,
+    images: ideaDetails.images?.[0] ? [ideaDetails.images[0]] : [],
+    category: ideaDetails.category,
+    author: ideaDetails.author,
+    _count: ideaDetails._count,
+    createdAt: ideaDetails.createdAt,
+    updatedAt: ideaDetails.updatedAt,
+
+    problemStatement: null,
+    proposedSolution: null,
+    description: null,
+    comments: [],
+
+    hasAccess: false,
+    requiresAccess: true,
+    contentLocked: true,
+    suggestedActionText: getSuggestedActionText(
+      extra.suggestedAction as string,
+    ),
+    ...extra,
+  });
+
+  if (!userId) {
+    if (ideaDetails.accessType === IdeaAccessType.FREE) {
+      const full = await fetchFullIdea();
+      return {
+        ...full,
+        hasAccess: true,
+        requiresAccess: false,
+        contentLocked: false,
+      };
+    }
+
+    return buildLockedResponse({
+      guestLocked: true,
+      isMemberOnly: ideaDetails.accessType === IdeaAccessType.MEMBER_ONLY,
+      isPaid: ideaDetails.accessType === IdeaAccessType.PAID,
+    });
+  }
+
+  const [user, isPurchased, pendingPayment] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        member: true,
+      },
+    }),
+    prisma.ideaPurchase.findUnique({
+      where: {
+        userId_ideaId: { userId, ideaId: ideaDetails.id },
+      },
+    }),
+
+    prisma.ideaPayment.findFirst({
+      where: {
+        userId,
+        ideaId: ideaDetails.id,
+        status: "PENDING",
+      },
+    }),
+  ]);
+
+  if (!user) {
+    throw new AppError(401, "User not found", "UNAUTHORIZED");
+  }
+
+  if (user.role === Role.ADMIN) {
+    const full = await fetchFullIdea();
+    return {
+      ...full,
+      hasAccess: true,
+      requiresAccess: false,
+      contentLocked: false,
+    };
+  }
+
+  let hasAccess = false;
+
+  if (ideaDetails.accessType === IdeaAccessType.FREE) {
+    hasAccess = true;
+  } else if (ideaDetails.accessType === IdeaAccessType.MEMBER_ONLY) {
+    hasAccess = user.role === Role.MEMBER || !!isPurchased;
+  } else if (ideaDetails.accessType === IdeaAccessType.PAID) {
+    hasAccess = !!isPurchased;
+  }
+
+  if (hasAccess) {
+    const full = await fetchFullIdea();
+    return {
+      ...full,
+      hasAccess: true,
+      requiresAccess: false,
+      contentLocked: false,
+    };
+  }
+
+  const isMemberActive =
+    user.member?.status === "APPROVED" && user.member?.isActive;
+
+  return buildLockedResponse({
+    userRole: user.role,
+    isMember: user.role === Role.MEMBER,
+    isMemberActive,
+
+    hasPendingPayment: !!pendingPayment,
+    pendingPaymentId: pendingPayment?.id ?? null,
+    suggestedAction: pendingPayment
+      ? "complete_payment"
+      : ideaDetails.accessType === IdeaAccessType.MEMBER_ONLY &&
+          user.role !== Role.MEMBER
+        ? "buy_membership_or_idea"
+        : "buy_idea",
+  });
+};
+
+const submitIdeaForAdminApproval = async (userId: string, slug: string) => {
+  const idea = await prisma.idea.findUnique({
+    where: { slug: slug, authorId: userId },
+  });
+
+  if (!idea) {
+    throw new AppError(
+      404,
+      "Idea not found or you don't have access",
+      "NOT_FOUND",
+    );
+  }
+
+  const updatedIdea = await prisma.idea.update({
+    where: { id: idea.id },
+    data: {
+      status: IdeaStatus.UNDER_REVIEW,
+    },
+  });
+
+  return updatedIdea;
 };
 
 const updateIdeaForMember = async (
@@ -308,13 +546,55 @@ const deleteIdeaForMember = async (userId: string, slug: string) => {
   return { message: "Idea deleted successfully" };
 };
 
+const myPurchasedIdeas = async (userId: string) => {
+  const ideas = await prisma.ideaPayment.findMany({
+    where: { userId },
+    include: {
+      idea: true,
+    },
+  });
+
+  return ideas;
+};
+
+const checkPurchaseStatus = async (userId: string, ideaId: string) => {
+  const idea = await prisma.idea.findUnique({ where: { id: ideaId } });
+  if (!idea) {
+    throw new AppError(404, "Idea not found", "NOT_FOUND");
+  }
+
+  // Check if user has purchased
+  const purchase = await prisma.ideaPurchase.findUnique({
+    where: {
+      userId_ideaId: { userId, ideaId: idea.id },
+    },
+  });
+
+  // Check if payment is completed
+  const payment = await prisma.ideaPayment.findFirst({
+    where: {
+      userId,
+      ideaId: idea.id,
+      status: PaymentStatus.PAID,
+    },
+  });
+
+  const hasAccess = !!(purchase || payment);
+
+  return { hasAccess };
+};
+
 export const ideaService = {
- 
   createIdea,
   getIdeasForMember,
   getIdeaByIdForMember,
   updateIdeaForMember,
   deleteIdeaForMember,
-  getAllIdeas,
+  getAllIdeasForAdmin,
+  getAllIdeasPublic,
   getIdeaById,
+  getDraftIdeasForMember,
+  submitIdeaForAdminApproval,
+  myPurchasedIdeas,
+  checkPurchaseStatus,
 };

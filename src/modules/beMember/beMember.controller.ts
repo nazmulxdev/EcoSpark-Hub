@@ -39,8 +39,20 @@ const initiatePayment = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getMyPaymentInfo = catchAsync(async (req: Request, res: Response) => {
+  const userId = req.user?.id as string;
+  const result = await beMemberService.getMyPaymentInfo(userId);
+  AppResponse(res, {
+    statusCode: status.OK,
+    success: true,
+    message: "My payment info fetched successfully.",
+    data: result,
+  });
+});
+
 export const beMemberController = {
   becomeMember,
   becomeMemberWithPayLater,
   initiatePayment,
+  getMyPaymentInfo,
 };

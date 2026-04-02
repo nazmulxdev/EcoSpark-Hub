@@ -12,7 +12,6 @@ interface IValidationSchema {
 
 const validateRequest = (schema: IValidationSchema) => {
   return catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    console.log(req.body);
     if (req.body && typeof req.body.data === "string") {
       try {
         req.body = JSON.parse(req.body.data);
