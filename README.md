@@ -12,9 +12,9 @@ Built with **Node.js, Express, TypeScript, Prisma, PostgreSQL, and Stripe**.
 
 ## 🚀 Live Links
 
-[![Live Frontend](https://img.shields.io/badge/Live_Frontend-SkillBridge-blue?style=for-the-badge&logo=vercel)](https://ecospark-hub.vercel.app/)
+[![Live Frontend](https://img.shields.io/badge/Live_Frontend-EcoSpark_Hub-blue?style=for-the-badge&logo=vercel)](https://ecospark-hub.vercel.app/)
 
-[![Live Backend API](https://img.shields.io/badge/Live_API-SkillBridge_Server-blueviolet?style=for-the-badge&logo=vercel)](https://ecosoark-hub.vercel.app/)
+[![Live Backend API](https://img.shields.io/badge/Live_API-EcoSpark_Hub_Server-blueviolet?style=for-the-badge&logo=vercel)](https://ecosoark-hub.vercel.app/)
 
 [![Frontend Repo](https://img.shields.io/badge/Frontend_Repo-GitHub-000?style=for-the-badge&logo=github)](https://github.com/nazmulxdev/EcoSpark-Hub-Frontend-)
 
