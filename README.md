@@ -1,4 +1,5 @@
 # 🌿 EcoSpark Hub Backend
+
 ### REST API for Sustainability Community Platform
 
 This is the backend server for the EcoSpark Hub platform — a sustainability community platform with idea sharing, voting, comments, payments, and role-based access control.
@@ -6,14 +7,25 @@ This is the backend server for the EcoSpark Hub platform — a sustainability co
 Built with **Node.js, Express, TypeScript, Prisma, PostgreSQL, and Stripe**.
 
 ## 👨‍💻 Author
+
 **Md. Nazmul Hossen**
 
 ## 🚀 Live Links
-![Live API](https://img.shields.io/badge/Live_API-EcoSpark_Server-blueviolet?style=for-the-badge&logo=vercel)
-![Backend Repo](https://img.shields.io/badge/Backend_Repo-GitHub-333?style=for-the-badge&logo=github)
+
+[![Live Frontend](https://img.shields.io/badge/Live_Frontend-SkillBridge-blue?style=for-the-badge&logo=vercel)](https://ecospark-hub.vercel.app/)
+
+[![Live Backend API](https://img.shields.io/badge/Live_API-SkillBridge_Server-blueviolet?style=for-the-badge&logo=vercel)](https://ecosoark-hub.vercel.app/)
+
+[![Frontend Repo](https://img.shields.io/badge/Frontend_Repo-GitHub-000?style=for-the-badge&logo=github)](https://github.com/nazmulxdev/EcoSpark-Hub-Frontend-)
+
+[![Backend Repo](https://img.shields.io/badge/Backend_Repo-GitHub-333?style=for-the-badge&logo=github)](https://github.com/nazmulxdev/EcoSpark-Hub)
+
+---
 
 ## 📌 Project Overview
+
 EcoSpark Hub Backend provides a complete REST API for:
+
 - 👥 **User authentication & role-based access** (USER, MEMBER, ADMIN)
 - 💡 **Idea management** (CRUD, approval workflow, access control)
 - 💬 **Comment system** (nested replies)
@@ -24,6 +36,7 @@ EcoSpark Hub Backend provides a complete REST API for:
 - 📊 **Dashboard analytics**
 
 ## 🛠️ Tech Stack
+
 - **Node.js**
 - **Express.js**
 - **TypeScript**
@@ -35,6 +48,7 @@ EcoSpark Hub Backend provides a complete REST API for:
 - **Better Auth**
 
 ## 📂 Project Structure
+
 ```text
 src/
  ├── modules/
@@ -57,6 +71,7 @@ src/
 ```
 
 ## 🔐 Authentication & Authorization
+
 - **Better Auth** for authentication
 - **Role-based access control**:
   - `USER` - Basic access
@@ -64,6 +79,7 @@ src/
   - `ADMIN` - Full control
 
 ## 💰 Payment System
+
 - Stripe integration
 - Idea purchase (one-time)
 - Membership subscription
@@ -74,6 +90,7 @@ src/
 ## 📡 API Endpoints
 
 ### 🔐 Auth Routes
+
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
 | POST | `/api/auth/register` | User registration |
@@ -82,6 +99,7 @@ src/
 | POST | `/api/auth/logout` | User logout |
 
 ### 💡 Idea Routes
+
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
 | GET | `/api/v1/ideas/public` | Get all approved ideas |
@@ -97,12 +115,14 @@ src/
 | GET | `/api/v1/ideas` | Get all ideas (Admin) |
 
 ### 👍 Vote Routes
+
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
 | POST | `/api/v1/votes` | Cast vote |
 | GET | `/api/v1/votes/status/:ideaId` | Get vote status |
 
 ### 💬 Comment Routes
+
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
 | POST | `/api/v1/comments` | Create comment |
@@ -111,6 +131,7 @@ src/
 | DELETE | `/api/v1/comments/:commentId` | Delete comment |
 
 ### 🔖 Watchlist Routes
+
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
 | POST | `/api/v1/watchlist/add` | Add to watchlist |
@@ -119,6 +140,7 @@ src/
 | GET | `/api/v1/watchlist/check/:ideaId` | Check if in watchlist |
 
 ### 💳 Payment Routes
+
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
 | POST | `/api/v1/idea-purchase/purchase/:ideaId` | Direct purchase |
@@ -127,6 +149,7 @@ src/
 | POST | `/api/v1/webhook/stripe` | Stripe webhook |
 
 ### 📝 Blog Routes
+
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
 | GET | `/api/v1/blog` | Get all blogs |
@@ -136,6 +159,7 @@ src/
 | DELETE | `/api/v1/blog/:slug` | Delete blog (Admin) |
 
 ### 🏷️ Category Routes
+
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
 | GET | `/api/v1/category` | Get categories |
@@ -144,12 +168,14 @@ src/
 | DELETE | `/api/v1/category/:slug` | Delete category (Admin) |
 
 ### 👥 Member Routes
+
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
 | GET | `/api/v1/member/dashboard` | Member dashboard data |
 | POST | `/api/v1/member/apply` | Apply for membership |
 
 ### 🛡️ Admin Routes
+
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
 | GET | `/api/v1/admin/dashboard` | Admin dashboard data |
@@ -159,6 +185,7 @@ src/
 | PATCH | `/api/v1/admin/membership-requests/:requestId` | Approve/reject request |
 
 ## 🌍 Environment Variables
+
 Create a `.env` file in the root directory:
 
 ```env
@@ -188,6 +215,7 @@ FRONTEND_URL=http://localhost:3000
 ## 🗄️ Database Schema
 
 ### Core Models
+
 | Model | Description |
 | :--- | :--- |
 | **User** | User accounts & roles (USER, MEMBER, ADMIN) |
@@ -203,12 +231,14 @@ FRONTEND_URL=http://localhost:3000
 | **Member** | Member-specific data |
 
 ## 📊 Idea Status Flow
+
 ```text
 DRAFT → UNDER_REVIEW → APPROVED
                     ↘ REJECTED
 ```
 
 ## 💳 Payment Flow
+
 1. User clicks "Purchase"
 2. Create Payment Record (`UNPAID`)
 3. Create Stripe Session (`PENDING`)
@@ -219,20 +249,24 @@ DRAFT → UNDER_REVIEW → APPROVED
 ## ⚙️ Installation & Setup
 
 ### 1️⃣ Clone Repository
+
 ```bash
 git clone <your-repository-url>
 cd ecospark-hub-backend
 ```
 
 ### 2️⃣ Install Dependencies
+
 ```bash
 npm install
 ```
 
 ### 3️⃣ Setup Environment Variables
+
 Create `.env` file (see above).
 
 ### 4️⃣ Setup Database
+
 ```bash
 # Generate Prisma client
 npx prisma generate
@@ -245,18 +279,22 @@ npx prisma db seed
 ```
 
 ### 5️⃣ Run Development Server
+
 ```bash
 npm run dev
 ```
+
 Server will run at: `http://localhost:5000`
 
 ## 🏗️ Build for Production
+
 ```bash
 npm run build
 npm start
 ```
 
 ## 🧪 Testing
+
 ```bash
 npm run test
 ```
@@ -264,6 +302,7 @@ npm run test
 ## 📦 API Response Format
 
 ### Success Response
+
 ```json
 {
   "success": true,
@@ -274,6 +313,7 @@ npm run test
 ```
 
 ### Error Response
+
 ```json
 {
   "success": false,
@@ -285,11 +325,13 @@ npm run test
 ```
 
 ## 🔄 Webhook Endpoints
+
 | Endpoint | Description |
 | :--- | :--- |
 | POST `/api/v1/webhook/stripe` | Stripe payment webhook |
 
 ## 📊 Features Summary
+
 | Feature | Status |
 | :--- | :--- |
 | Authentication | ✅ |
@@ -310,6 +352,7 @@ npm run test
 | Search Functionality | ✅ |
 
 ## 🤝 Contributing
+
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/amazing`)
 3. Commit your changes (`git commit -m 'Add some amazing feature'`)
@@ -317,13 +360,15 @@ npm run test
 5. Open a Pull Request
 
 ## 📄 License
+
 This project is licensed under the **ISC License**.
 
 ---
+
 ### 🙏 Acknowledgements
+
 - **Stripe** for payment processing
 - **Cloudinary** for image hosting
 - **Better Auth** for authentication
 - **Prisma** for ORM
-
 **Made with ❤️ for a sustainable future 🌱**

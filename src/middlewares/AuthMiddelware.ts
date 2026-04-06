@@ -11,7 +11,6 @@ const authMiddleware = (...roles: Array<Role>) => {
     const session = await auth.api.getSession({
       headers: fromNodeHeaders(req.headers),
     });
-    console.log(session);
 
     if (!session) {
       throw new AppError(

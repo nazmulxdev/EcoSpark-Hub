@@ -103,6 +103,8 @@ const fileuploaderMiddlewareForCreate = (
     req.body = JSON.parse(req.body.data);
   }
 
+  console.log(req.body);
+
   const payload: ICreateIdea = req.body;
 
   const files = req.files as {

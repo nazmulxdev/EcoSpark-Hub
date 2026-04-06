@@ -18,6 +18,7 @@ import {
 import { handlePrismaError, isPrismaError } from "../errors/handlePrismaError";
 import AppErrorResponse from "../shared/AppErrorResponse";
 import { deleteUploadedFileFromGlobalErrorHandler } from "../utils/deleteUploadedFileFromGlobalErrorHandler";
+import handleMulterError, { isMulterError } from "../errors/handleMulterError";
 
 const globalErrorHandler = async (
   error: unknown,
@@ -97,7 +98,31 @@ const globalErrorHandler = async (
     return;
   }
 
-  // 8. Final fallback
+  // 8. multer errors
+
+  if (isMulterError(error)) {
+    const result = handleMulterError(error);
+    AppErrorResponse(req, res, result, req.originalUrl);
+    return;
+  }
+
+  // 9. File upload unknown errors
+  if (error instanceof Error && error.message.toLowerCase().includes("file")) {
+    AppErrorResponse(
+      req,
+      res,
+      {
+        statusCode: 400,
+        name: "FileUploadError",
+        code: "UPLOAD_FAILED",
+        message: error.message,
+      },
+      req.originalUrl,
+    );
+    return;
+  }
+
+  // 10. Final fallback
   AppErrorResponse(
     req,
     res,

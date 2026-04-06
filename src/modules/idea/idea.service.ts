@@ -80,6 +80,7 @@ const getAllIdeasForAdmin = async (query: IQueryParams) => {
 
   return result;
 };
+
 const getAllIdeasPublic = async (query: IQueryParams) => {
   const queryBuilder = new QueryBuilder<
     Idea,
@@ -391,6 +392,17 @@ const getIdeaById = async (slug: string, userId?: string) => {
     };
   }
 
+  // author always has full access to their own idea
+  if (ideaDetails.authorId === userId) {
+    const full = await fetchFullIdea();
+    return {
+      ...full,
+      hasAccess: true,
+      requiresAccess: false,
+      contentLocked: false,
+    };
+  }
+
   let hasAccess = false;
 
   if (ideaDetails.accessType === IdeaAccessType.FREE) {
@@ -609,7 +621,10 @@ const checkPurchaseStatus = async (userId: string, ideaId: string) => {
     },
   });
 
-  const hasAccess = !!(purchase || payment);
+  // check is author of the idea
+  const isAuthor = idea.authorId === userId;
+
+  const hasAccess = !!(purchase || payment || isAuthor);
 
   return { hasAccess };
 };

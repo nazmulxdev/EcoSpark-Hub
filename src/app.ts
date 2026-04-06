@@ -2,7 +2,6 @@ import express, { Application, NextFunction, Request, Response } from "express";
 import notFoundError from "./middlewares/NotFound";
 import globalErrorHandler from "./middlewares/GlobalErrorHandler";
 import cors from "cors";
-import { config } from "./config/env";
 import cookieParser from "cookie-parser";
 import { toNodeHandler } from "better-auth/node";
 import { auth } from "./lib/auth";
@@ -11,6 +10,7 @@ import qs from "qs";
 import { paymentController } from "./modules/payment/payment.controller";
 
 const app: Application = express();
+app.set("trust proxy", true);
 
 app.set("query parser", (str: string) => {
   return qs.parse(str);
@@ -24,18 +24,16 @@ app.post(
   paymentController.handleStripeWebhook,
 );
 
-// cors
-
 app.use(
   cors({
     origin: [
-      config.FRONTEND_URL as string,
-      config.BETTER_AUTH_URL as string,
+      "https://ecospark-hub.vercel.app",
       "http://localhost:3000",
+      "https://ecosoark-hub.vercel.app",
     ],
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
   }),
 );
 
@@ -55,8 +53,8 @@ app.all(
   },
 );
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 // app routes
 
 app.use("/api/v1", indexRoutes);

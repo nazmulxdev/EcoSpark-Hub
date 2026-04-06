@@ -17,7 +17,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node ./dist/server.js",
-    "build": "tsc",
+    "build": "prisma generate && tsup src/index.ts --format esm --platform node --target node20 --outDir api --external pg-native",
     "dev": "tsx watch ./src/server.ts",
     "lint": "eslint ./src/**/*",
     "push": "tsx ./src/scripts/gitpush.ts",
@@ -40,6 +40,8 @@
     "qs": "^6.15.0",
     "slugify": "^1.6.8",
     "stripe": "^21.0.1",
+    "tsup": "^8.5.1",
+    "vercel": "^50.38.3",
     "zod": "^4.3.6"
   },
   "devDependencies": {

@@ -5,11 +5,14 @@ import { config } from "../config/env";
 import { Role, UserStatus } from "../generated/prisma/enums";
 
 export const auth = betterAuth({
-  baseURL: config.BETTER_AUTH_URL,
+  baseURL: "https://ecospark-hub.vercel.app",
+  // baseURL: "http://localhost:3000",
   trustedOrigins: [
     config.FRONTEND_URL as string,
     config.BETTER_AUTH_URL as string,
     "http://localhost:3000",
+    "https://ecospark-hub.vercel.app",
+    "https://ecosoark-hub.vercel.app",
   ],
   secret: config.BETTER_AUTH_SECRET,
   database: prismaAdapter(prisma, {
@@ -23,7 +26,8 @@ export const auth = betterAuth({
     google: {
       clientId: config.OAUTH_CLIENT_ID as string,
       clientSecret: config.OAUTH_CLIENT_SECRET,
-      redirectUri: `${config.BETTER_AUTH_URL}/api/auth/callback/google`,
+      redirectUri: `https://ecospark-hub.vercel.app/api/auth/callback/google`,
+      // redirectUri: `http://localhost:3000/api/auth/callback/google`,
       mapProfileToUser: () => {
         return {
           role: Role.USER,
@@ -65,5 +69,17 @@ export const auth = betterAuth({
       enabled: true,
       trustedProviders: ["google"],
     },
+  },
+  advanced: {
+    useSecureCookies: true,
+    trustedProxyHeaders: true,
+    disableOriginCheck: true,
+    defaultCookieAttributes: {
+      sameSite: "none",
+      secure: true,
+      httpOnly: true,
+      partitioned: true,
+    },
+    disableCSRFCheck: true,
   },
 });
